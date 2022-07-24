@@ -1,5 +1,14 @@
 package models
 
-type Group struct {
-	//TODO:заполнить в соответствии с докой
+type InputGroup struct {
+	AppId    int    `json:"app_id"`
+	Name     string `json:"name"`
+	SendRate string `json:"send_rate"`
+}
+
+type OutputGroup struct {
+	Id       int    `json:"id"`
+	AppId    int    `json:"app_id"`
+	Name     string `json:"name"`
+	SendRate string `json:"send_rate"`
 }
