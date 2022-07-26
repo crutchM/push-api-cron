@@ -17,27 +17,34 @@ type Service struct {
 	client http.Client
 }
 
-func NewService(r repository.Repository) *Service {
-	return &Service{
+func NewService(r repository.Repository) Service {
+	return Service{
 		repo:   r,
 		client: http.Client{},
 	}
 }
 
-func (s *Service) CreateGroup(input models.InputGroup) error {
+func (s *Service) CreateGroup(input models.InputGroup) (models.OutputGroup, error) {
 
 	p, _ := json.Marshal(input)
 	resp, err := http.Post(baseUrl+"/push/v1/management/groups", "application/json", bytes.NewBuffer(p))
 	if err != nil {
-		return err
+		return models.OutputGroup{}, err
 	}
 	defer resp.Body.Close()
-	//TODO:читать ответ
-	s.repo.CreateGroup(input)
-	return nil
+	var b models.OutputGroup
+	err = json.NewDecoder(resp.Body).Decode(&b)
+	if err != nil {
+		return models.OutputGroup{}, err
+	}
+	result, err := s.repo.CreateGroup(b)
+	if err != nil {
+		return models.OutputGroup{}, err
+	}
+	return result, nil
 }
 
-func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Batch, interval int) error {
+func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, interval int) error {
 	go func() {
 		for {
 			select {
@@ -62,9 +69,9 @@ func (s *Service) AddDevice(device device.Device) error {
 	return s.repo.AddDevice(device)
 }
 
-func (s *Service) prepareData(group int, data models.Batch) []byte {
+func (s *Service) prepareData(group int, data models.Messages) []byte {
 	newBatch := models.Batch{
-		Messages: data.Messages,
+		Messages: data,
 		Device:   s.FillDevices(),
 	}
 	var b []models.Batch

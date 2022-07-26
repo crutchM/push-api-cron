@@ -12,8 +12,8 @@ type Repository struct {
 	cache *core.Cache
 }
 
-func NewRepository(db *sqlx.DB, cache *core.Cache) *Repository {
-	return &Repository{db: db, cache: cache}
+func NewRepository(db *sqlx.DB, cache *core.Cache) Repository {
+	return Repository{db: db, cache: cache}
 }
 
 func (s *Repository) GetGroup(id int) (models.OutputGroup, error) {
@@ -25,9 +25,9 @@ func (s *Repository) GetGroup(id int) (models.OutputGroup, error) {
 	return res, nil
 }
 
-func (s *Repository) CreateGroup(input models.InputGroup) (models.OutputGroup, error) {
+func (s *Repository) CreateGroup(input models.OutputGroup) (models.OutputGroup, error) {
 	var id int
-	row := s.db.QueryRow("INSERT INTO groups (app_id, name, send_rate) VALUES $1,$2,$3 RETURNING id", input.AppId, input.Name, input.SendRate)
+	row := s.db.QueryRow("INSERT INTO groups (id, app_id, name, send_rate) VALUES( $1, $2,$3,$4) RETURNING id", input.Id, input.AppId, input.Name, input.SendRate)
 	if err := row.Scan(&id); err != nil {
 		return models.OutputGroup{}, err
 	}
@@ -41,7 +41,7 @@ func (s *Repository) CreateGroup(input models.InputGroup) (models.OutputGroup, e
 func (s *Repository) AddDevice(device device.Device) error {
 	s.cache.Set(device.Id, device, 0)
 	var res string
-	row := s.db.QueryRow("INSERT INTO devices (id, pushToken) values $1, $2 RETURNING id", device.Id, device.PushToken)
+	row := s.db.QueryRow("INSERT INTO devices (id, push_token) values ($1, $2) RETURNING id", device.Id, device.PushToken)
 	if err := row.Scan(&res); err != nil {
 		return err
 	}
