@@ -1,5 +1,6 @@
 package device
 
 type Device struct {
-	//TODO:согласовать, что помимо токена нам надо знать об устройствах
+	Id        string `json:"id" db:"id"`
+	PushToken string `json:"push_token" db:"push_token"`
 }

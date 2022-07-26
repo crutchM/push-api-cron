@@ -1,14 +1,14 @@
 package models
 
 type InputGroup struct {
-	AppId    int    `json:"app_id"`
-	Name     string `json:"name"`
-	SendRate string `json:"send_rate"`
+	AppId    int    `json:"app_id" db:"app_id"`
+	Name     string `json:"name" db:"name"`
+	SendRate int    `json:"send_rate" db:"send_rate"`
 }
 
 type OutputGroup struct {
-	Id       int    `json:"id"`
-	AppId    int    `json:"app_id"`
-	Name     string `json:"name"`
-	SendRate string `json:"send_rate"`
+	Id       int    `json:"id" db:"id"`
+	AppId    int    `json:"app_id" db:"app_id"`
+	Name     string `json:"name" db:"name"`
+	SendRate int    `json:"send_rate" db:"send_rate"`
 }

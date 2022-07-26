@@ -39,7 +39,31 @@ func (s *Repository) CreateGroup(input models.InputGroup) (models.OutputGroup, e
 }
 
 func (s *Repository) AddDevice(device device.Device) error {
-	s.cache.Set("", device, 0)
+	s.cache.Set(device.Id, device, 0)
+	var res string
+	row := s.db.QueryRow("INSERT INTO devices (id, pushToken) values $1, $2 RETURNING id", device.Id, device.PushToken)
+	if err := row.Scan(&res); err != nil {
+		return err
+	}
 	return nil
-	//TODO:заполнить сущность девайсов и добавлять в бд
+}
+
+func (s *Repository) GetAllDevices() []device.Device {
+	if len(s.cache.GetAll()) != 0 {
+		var res []device.Device
+		for _, v := range s.cache.GetAll() {
+			res = append(res, v.Value)
+		}
+		return res
+	}
+	var r []device.Device
+
+	err := s.db.Select(&r, "SELECT * FROM devices")
+	if err != nil {
+		return nil
+	}
+	for _, v := range r {
+		s.cache.Set(v.Id, v, 0)
+	}
+	return r
 }
