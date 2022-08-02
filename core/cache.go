@@ -8,7 +8,7 @@ import (
 )
 
 type Item struct {
-	Value      device.Device
+	Value      []device.Device
 	Created    time.Time
 	Expiration int64
 }
@@ -36,7 +36,7 @@ func NewCache(defaultExpiration, cleanupInterval time.Duration) *Cache {
 }
 
 //запихиваем в кеш значение, возможна перезапись существующего элемента
-func (s *Cache) Set(key string, value device.Device, duration time.Duration) {
+func (s *Cache) Set(key string, value []device.Device, duration time.Duration) {
 	var expiration int64
 	//определение продолжительности жизни айтема
 	if duration == 0 {
@@ -64,7 +64,7 @@ func (s *Cache) GetAll() (items []Item) {
 	return
 }
 
-func (s *Cache) Get(key string) (interface{}, bool) {
+func (s *Cache) Get(key string) ([]device.Device, bool) {
 	s.RLock()
 
 	defer s.RUnlock()

@@ -58,6 +58,6 @@ type Content struct {
 }
 
 type Device struct {
-	IdType   string `json:"id_type"`
-	IdValues string `json:"id_values"`
+	IdType   string   `json:"id_type"`
+	IdValues []string `json:"id_values"`
 }

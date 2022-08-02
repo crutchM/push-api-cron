@@ -12,8 +12,10 @@ type Repository struct {
 	cache *core.Cache
 }
 
-func NewRepository(db *sqlx.DB, cache *core.Cache) Repository {
-	return Repository{db: db, cache: cache}
+func NewRepository(db *sqlx.DB) Repository {
+	rep := Repository{db: db, cache: core.NewCache(0, 0)}
+	rep.UpdateCache()
+	return rep
 }
 
 func (s *Repository) GetGroup(id int) (models.OutputGroup, error) {
@@ -39,7 +41,10 @@ func (s *Repository) CreateGroup(input models.OutputGroup) (models.OutputGroup, 
 }
 
 func (s *Repository) AddDevice(device device.Device) error {
-	s.cache.Set(device.Id, device, 0)
+	elem, _ := s.cache.Get(string(rune(device.TimeZone)))
+	elem = append(elem, device)
+	s.cache.Delete(string(rune(device.TimeZone)))
+	s.cache.Set(string(rune(device.TimeZone)), elem, 0)
 	var res string
 	row := s.db.QueryRow("INSERT INTO devices (id, push_token) values ($1, $2) RETURNING id", device.Id, device.PushToken)
 	if err := row.Scan(&res); err != nil {
@@ -48,22 +53,38 @@ func (s *Repository) AddDevice(device device.Device) error {
 	return nil
 }
 
-func (s *Repository) GetAllDevices() []device.Device {
-	if len(s.cache.GetAll()) != 0 {
-		var res []device.Device
-		for _, v := range s.cache.GetAll() {
-			res = append(res, v.Value)
-		}
-		return res
+func (s *Repository) UpdateCache() {
+	c := core.NewCache(0, 0)
+	for _, v := range s.GetAllFromDb() {
+		c.Set(string(rune(v[0].TimeZone)), v, 0)
 	}
-	var r []device.Device
+	s.cache = c
+}
 
-	err := s.db.Select(&r, "SELECT * FROM devices")
+func (s *Repository) GetAllDevices() [][]device.Device {
+	var res [][]device.Device
+	for _, v := range s.cache.GetAll() {
+		res = append(res, v.Value)
+	}
+	return res
+}
+
+func (s *Repository) GetAllFromDb() [][]device.Device {
+	var times []int
+	var result [][]device.Device
+	err := s.db.Select(&times, "select time_zone from devices group by time_zone")
 	if err != nil {
 		return nil
 	}
-	for _, v := range r {
-		s.cache.Set(v.Id, v, 0)
+	for _, v := range times {
+		var r []device.Device
+		err := s.db.Select(&r, "SELECT * FROM devices where time_zone=$1", v)
+		if err != nil {
+			return nil
+		}
+		result = append(result, r)
+		s.cache.Set(string(rune(v)), r, 0)
+
 	}
-	return r
+	return result
 }

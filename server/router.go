@@ -44,7 +44,7 @@ type input struct {
 }
 
 func (r *Router) Stop(c *gin.Context) {
-	r.ch <- struct{}{}
+	r.service.Stop(r.ch)
 }
 func (r *Router) Start(c *gin.Context) {
 	var inp input
@@ -65,6 +65,7 @@ func (r *Router) Start(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"status": "success",
 	})
+	return
 }
 
 func (r *Router) AddDevice(c *gin.Context) {

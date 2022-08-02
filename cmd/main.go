@@ -5,7 +5,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
-	"push-api-cron/core"
 	"push-api-cron/data/repository"
 	"push-api-cron/data/service"
 	"push-api-cron/server"
@@ -17,7 +16,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	repo := repository.NewRepository(db, core.NewCache(0, 0))
+	repo := repository.NewRepository(db)
 	serv := service.NewService(repo)
 	hand := server.NewRouter(serv)
 	s := new(Server)
