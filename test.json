@@ -1,0 +1,50 @@
+{
+  "push_batch_request": {
+    "group_id": 232657,
+    "client_transfer_id": 1392196934598389233,
+    "tag": "tag",
+    "batch": [
+      {
+        "messages": {
+          "android": {
+            "silent": false,
+            "content": {
+              "title": "title",
+              "text": "text",
+              "icon": "string",
+              "image": "https://example.com/picture.jpg",
+              "banner": "https://example.com/picture.jpg",
+              "data": "string",
+              "channel_id": "string",
+              "priority": -2,
+              "collapse_key": 2001,
+              "vibration": [
+                0,
+                500
+              ],
+              "led_interval": 50,
+              "led_pause_interval": 50,
+              "visibility": "public",
+              "urgency": "high"
+            }
+          }
+        },
+        "devices": [
+          {
+            "id_type": "google_aid",
+            "id_values": [
+              "f7f87a6e"
+            ]
+          },
+          {
+            "id_type": "google_aid",
+            "id_values": [
+              "f7f87a6e",
+              "bcce"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

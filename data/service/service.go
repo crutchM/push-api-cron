@@ -57,56 +57,63 @@ func (s *Service) CreateGroup(input models.InputGroup) (models.OutputGroup, erro
 	return result, nil
 }
 
-func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, interval int, sendHour int) error {
+func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, sendHour int) error {
+	wg := sync.WaitGroup{}
+	var completed = true
+
 	go func() {
 		for {
+			dev := s.repo.GetAllDevices()
 			select {
 			case <-stopChan:
+				fmt.Println("all routines stopped")
 				return
 			default:
-				dev := s.repo.GetAllDevices()
+				if !completed {
+					continue
+				}
+				go func() {
+					time.Sleep(10 * time.Second)
+					wg.Wait()
+					completed = true
+				}()
 				for _, v := range dev {
 					prepared := s.prepareData(groupId, data, v)
 					go func(data []byte, timezone int) {
-						for {
-							var push models.Push
-							json.Unmarshal(data, &push)
-							if time.Now().UTC().Hour()+timezone != sendHour {
-								if math.Abs(float64(time.Now().UTC().Hour()+timezone-sendHour)) > 2 {
-									time.Sleep(1 * time.Hour)
-									continue
-								} else {
-									time.Sleep(10 * time.Minute)
-									continue
-								}
+						wg.Add(1)
+						var push models.Push
+						json.Unmarshal(data, &push)
+						utcHour := time.Now().UTC().Hour()
+						temp := utcHour + timezone - sendHour
+						fmt.Println(temp)
+						if utcHour+timezone != sendHour {
+							if math.Abs(float64(utcHour+timezone-sendHour)) > 2 {
+								time.Sleep(1 * time.Hour)
+							} else {
+								time.Sleep(30 * time.Minute)
 							}
-							tmp := bytes.NewReader(data)
-							t := string(data)
-							fmt.Println(t)
-							req, _ := http.NewRequest("POST", baseUrl+"/v1/send-batch", tmp)
-							req.Header.Set("Authorization", "OAuth AQAAAAA16k9pAAhCeSFuHQpfykDPta5srg51zdw")
-							resp, err := s.client.Do(req)
-							fmt.Println(resp)
-							if err != nil {
-								stopChan <- struct{}{}
-							}
-							wg := sync.WaitGroup{}
-							wg.Add(1)
-							go func() {
-								time.Sleep(time.Duration(interval) * time.Second)
-								wg.Done()
-							}()
-							body, _ := io.ReadAll(resp.Body)
-							fmt.Println(string(body))
-							wg.Wait()
-							fmt.Println("прошло ", interval, "секунд")
 						}
+						tmp := bytes.NewReader(data)
+						t := string(data)
+						fmt.Println(t)
+						req, _ := http.NewRequest("POST", baseUrl+"/v1/send-batch", tmp)
+						req.Header.Set("Authorization", "OAuth AQAAAAA16k9pAAhCeSFuHQpfykDPta5srg51zdw")
+						resp, err := s.client.Do(req)
+						fmt.Println(resp)
+						if err != nil {
+							stopChan <- struct{}{}
+						}
+						body, _ := io.ReadAll(resp.Body)
+						fmt.Println(string(body))
+						wg.Done()
+
 					}(prepared, v[0].TimeZone)
 				}
-
+				completed = false
 			}
 		}
 	}()
+
 	return nil
 }
 
@@ -144,6 +151,7 @@ func (s *Service) FillDevices(devices []device.Device) []models.Device {
 
 func (s *Service) Stop(ch chan struct{}) {
 	ch <- struct{}{}
+	return
 }
 
 //func (s *GroupsService) GetGroups(appId int) (models.InputGroup, error) {

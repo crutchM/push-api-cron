@@ -40,29 +40,36 @@ func (r *Router) InitRoutes() *gin.Engine {
 type input struct {
 	Group    int             `json:"group_id"`
 	Messages models.Messages `json:"messages"`
-	Interval int             `json:"interval"`
+	Time     int             `json:"interval"`
 }
 
 func (r *Router) Stop(c *gin.Context) {
 	r.service.Stop(r.ch)
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"status": "success",
+	})
+	return
 }
 func (r *Router) Start(c *gin.Context) {
 	var inp input
-	if err := c.BindJSON(&inp); err != nil {
+	cp := c.Copy()
+	if err := cp.BindJSON(&inp); err != nil {
 		logrus.Info()
 		c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
 		})
 		return
 	}
-	if err := r.service.Start(r.ch, inp.Group, inp.Messages, inp.Interval); err != nil {
-		logrus.Info()
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, map[string]interface{}{
+	go func() {
+		if err := r.service.Start(r.ch, inp.Group, inp.Messages, inp.Time); err != nil {
+			logrus.Info()
+			cp.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"error": err.Error(),
+			})
+			return
+		}
+	}()
+	cp.JSON(http.StatusOK, map[string]interface{}{
 		"status": "success",
 	})
 	return

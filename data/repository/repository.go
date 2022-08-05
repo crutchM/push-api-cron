@@ -53,6 +53,16 @@ func (s *Repository) AddDevice(device device.Device) error {
 	return nil
 }
 
+func (s *Repository) UpdateDevice(pushToken string, id string) error {
+	s.db.QueryRow("update devices set push_token=$1 where id=$2", pushToken, id)
+	return nil
+}
+
+func (s *Repository) DeleteDevice(id string) error {
+	s.db.QueryRow("delete from devices where id=$1", id)
+	return nil
+}
+
 func (s *Repository) UpdateCache() {
 	c := core.NewCache(0, 0)
 	for _, v := range s.GetAllFromDb() {
