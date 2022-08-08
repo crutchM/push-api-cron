@@ -32,6 +32,8 @@ func (r *Router) InitRoutes() *gin.Engine {
 	device := router.Group("/device")
 	{
 		device.POST("/add", r.AddDevice) // запись токена устройства в базу
+		device.POST("/update", r.UpdateToken)
+		device.POST("/remove", r.DeleteDevice)
 
 	}
 	return router
@@ -41,6 +43,37 @@ type input struct {
 	Group    int             `json:"group_id"`
 	Messages models.Messages `json:"messages"`
 	Time     int             `json:"interval"`
+}
+
+type inp struct {
+	id       string `json:"id"`
+	oldToken string `json:"old_token"`
+	newToken string `json:"new_token"`
+}
+
+func (r *Router) UpdateToken(c *gin.Context) {
+	var input inp
+	if err := c.BindJSON(&input); err != nil {
+		logrus.Info()
+		c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": err.Error(),
+		})
+		return
+	}
+	r.service.UpdateToken(input.oldToken, input.newToken)
+}
+
+func (r *Router) DeleteDevice(c *gin.Context) {
+	var input inp
+	if err := c.BindJSON(&input); err != nil {
+		logrus.Info()
+		c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": err.Error(),
+		})
+		return
+	}
+	r.service.DeleteDevice(input.oldToken)
+	return
 }
 
 func (r *Router) Stop(c *gin.Context) {

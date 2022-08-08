@@ -58,9 +58,16 @@ func (s *Repository) UpdateDevice(pushToken string, id string) error {
 	return nil
 }
 
-func (s *Repository) DeleteDevice(id string) error {
-	s.db.QueryRow("delete from devices where id=$1", id)
+func (s *Repository) DeleteDevice(token string) error {
+	s.db.QueryRow("delete from devices where push_token=$1", token)
+	s.UpdateCache()
 	return nil
+}
+
+func (s *Repository) UpdateToken(oldToken, newToken string) {
+	s.db.QueryRow("UPDATE devices set push_token=$1 where push_token=$2", newToken, oldToken)
+	s.UpdateCache()
+	return
 }
 
 func (s *Repository) UpdateCache() {

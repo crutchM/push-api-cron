@@ -28,6 +28,14 @@ func NewService(r repository.Repository) Service {
 	}
 }
 
+func (s *Service) UpdateToken(old, new string) {
+	s.repo.UpdateToken(old, new)
+}
+
+func (s *Service) DeleteDevice(token string) {
+	s.repo.DeleteDevice(token)
+}
+
 func (s *Service) CreateGroup(input models.InputGroup) (models.OutputGroup, error) {
 	tmp := map[string]interface{}{
 		"group": input,
@@ -63,7 +71,6 @@ func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Message
 
 	go func() {
 		for {
-			dev := s.repo.GetAllDevices()
 			select {
 			case <-stopChan:
 				fmt.Println("all routines stopped")
@@ -77,6 +84,7 @@ func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Message
 					wg.Wait()
 					completed = true
 				}()
+				dev := s.repo.GetAllDevices()
 				for _, v := range dev {
 					prepared := s.prepareData(groupId, data, v)
 					go func(data []byte, timezone int) {
@@ -110,6 +118,9 @@ func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Message
 					}(prepared, v[0].TimeZone)
 				}
 				completed = false
+				if len(dev) == 1 {
+					time.Sleep(1 * time.Hour)
+				}
 			}
 		}
 	}()
