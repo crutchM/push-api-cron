@@ -151,7 +151,7 @@ func (s *Service) FillDevices(devices []device.Device) []models.Device {
 	for _, v := range devices {
 		values = append(values, v.PushToken)
 		result = append(result, models.Device{
-			IdType:   "google_aid",
+			IdType:   "android_push_token",
 			IdValues: values,
 		})
 
