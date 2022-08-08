@@ -42,13 +42,13 @@ func (r *Router) InitRoutes() *gin.Engine {
 type input struct {
 	Group    int             `json:"group_id"`
 	Messages models.Messages `json:"messages"`
-	Time     int             `json:"interval"`
+	Time     []int           `json:"send_hour"`
 }
 
 type inp struct {
-	id       string `json:"id"`
-	oldToken string `json:"old_token"`
-	newToken string `json:"new_token"`
+	Id       string `json:"id"`
+	OldToken string `json:"old_token"`
+	NewToken string `json:"new_token"`
 }
 
 func (r *Router) UpdateToken(c *gin.Context) {
@@ -60,7 +60,7 @@ func (r *Router) UpdateToken(c *gin.Context) {
 		})
 		return
 	}
-	r.service.UpdateToken(input.oldToken, input.newToken)
+	r.service.UpdateToken(input.OldToken, input.NewToken)
 }
 
 func (r *Router) DeleteDevice(c *gin.Context) {
@@ -72,7 +72,7 @@ func (r *Router) DeleteDevice(c *gin.Context) {
 		})
 		return
 	}
-	r.service.DeleteDevice(input.oldToken)
+	r.service.DeleteDevice(input.OldToken)
 	return
 }
 

@@ -65,10 +65,8 @@ func (s *Service) CreateGroup(input models.InputGroup) (models.OutputGroup, erro
 	return result, nil
 }
 
-func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, sendHour int) error {
+func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, sendHour []int) error {
 	wg := sync.WaitGroup{}
-	var completed = true
-
 	go func() {
 		for {
 			select {
@@ -76,29 +74,26 @@ func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Message
 				fmt.Println("all routines stopped")
 				return
 			default:
-				if !completed {
-					continue
-				}
-				go func() {
-					time.Sleep(10 * time.Second)
-					wg.Wait()
-					completed = true
-				}()
 				dev := s.repo.GetAllDevices()
 				for _, v := range dev {
 					prepared := s.prepareData(groupId, data, v)
 					go func(data []byte, timezone int) {
+					again:
 						wg.Add(1)
 						var push models.Push
 						json.Unmarshal(data, &push)
 						utcHour := time.Now().UTC().Hour()
-						temp := utcHour + timezone - sendHour
-						fmt.Println(temp)
-						if utcHour+timezone != sendHour {
-							if math.Abs(float64(utcHour+timezone-sendHour)) > 2 {
-								time.Sleep(1 * time.Hour)
-							} else {
-								time.Sleep(30 * time.Minute)
+						for _, hour := range sendHour {
+							temp := utcHour + timezone - hour
+							fmt.Println(temp)
+							if utcHour+timezone != hour {
+								if math.Abs(float64(utcHour+timezone-hour)) > 2 {
+									time.Sleep(1 * time.Hour)
+									goto again
+								} else {
+									time.Sleep(30 * time.Minute)
+									goto again
+								}
 							}
 						}
 						tmp := bytes.NewReader(data)
@@ -117,14 +112,13 @@ func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Message
 
 					}(prepared, v[0].TimeZone)
 				}
-				completed = false
+				wg.Wait()
 				if len(dev) == 1 {
 					time.Sleep(1 * time.Hour)
 				}
 			}
 		}
 	}()
-
 	return nil
 }
 
