@@ -46,7 +46,7 @@ func (s *Repository) AddDevice(device device.Device) error {
 	s.cache.Delete(string(rune(device.TimeZone)))
 	s.cache.Set(string(rune(device.TimeZone)), elem, 0)
 	var res string
-	row := s.db.QueryRow("INSERT INTO devices (id, push_token, time_zone) values ($1, $2, $3) RETURNING id", device.Id, device.PushToken, device.TimeZone)
+	row := s.db.QueryRow("INSERT INTO devices (push_token, time_zone) values ($1, $2) RETURNING id", device.PushToken, device.TimeZone)
 	if err := row.Scan(&res); err != nil {
 		return err
 	}

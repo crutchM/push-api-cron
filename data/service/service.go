@@ -66,8 +66,8 @@ func (s *Service) CreateGroup(input models.InputGroup) (models.OutputGroup, erro
 }
 
 func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, sendHour int) error {
-	wg := sync.WaitGroup{}
 	go func() {
+		wg := sync.WaitGroup{}
 		for {
 			select {
 			case <-stopChan:
@@ -114,11 +114,11 @@ func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Message
 
 					}(prepared, v[0].TimeZone)
 				}
-				wg.Wait()
 				if len(dev) == 1 {
 					time.Sleep(1 * time.Hour)
 				}
 			}
+			wg.Wait()
 		}
 	}()
 	return nil
