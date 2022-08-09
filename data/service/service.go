@@ -65,7 +65,7 @@ func (s *Service) CreateGroup(input models.InputGroup) (models.OutputGroup, erro
 	return result, nil
 }
 
-func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, sendHour []int) error {
+func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Messages, sendHour int) error {
 	wg := sync.WaitGroup{}
 	go func() {
 		for {
@@ -83,17 +83,19 @@ func (s *Service) Start(stopChan chan struct{}, groupId int, data models.Message
 						var push models.Push
 						json.Unmarshal(data, &push)
 						utcHour := time.Now().UTC().Hour()
-						for _, hour := range sendHour {
-							temp := utcHour + timezone - hour
-							fmt.Println(temp)
-							if utcHour+timezone != hour {
-								if math.Abs(float64(utcHour+timezone-hour)) > 2 {
-									time.Sleep(1 * time.Hour)
-									goto again
-								} else {
-									time.Sleep(30 * time.Minute)
-									goto again
-								}
+						localTime := utcHour + timezone
+						if localTime >= 24 {
+							localTime -= 24
+						}
+						temp := localTime - sendHour
+						fmt.Println(temp, time.Now())
+						if localTime != sendHour {
+							if math.Abs(float64(localTime-sendHour)) > 2 {
+								time.Sleep(1 * time.Hour)
+								goto again
+							} else {
+								time.Sleep(30 * time.Minute)
+								goto again
 							}
 						}
 						tmp := bytes.NewReader(data)

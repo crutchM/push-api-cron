@@ -42,7 +42,7 @@ func (r *Router) InitRoutes() *gin.Engine {
 type input struct {
 	Group    int             `json:"group_id"`
 	Messages models.Messages `json:"messages"`
-	Time     []int           `json:"send_hour"`
+	Time     int             `json:"send_hour"`
 }
 
 type inp struct {

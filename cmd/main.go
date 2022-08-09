@@ -28,7 +28,7 @@ func main() {
 func NewPostgresDb() (*sqlx.DB, error) {
 	//db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"))
 	//cfg.Host, cfg.Port, cfg.Username, cfg.DBName, cfg.Password))
-	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"))
+	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://postgres:postgres@137.184.128.28:5432/postgres?sslmode=disable"))
 	if err != nil {
 		return nil, err
 	}
